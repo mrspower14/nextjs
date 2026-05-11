@@ -4,17 +4,32 @@ import { useRouter } from "next/router";
 import sales from '@/mock/sales.json';
 import style from './[id].module.css';
 import Image from 'next/image';
-import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
-import { fetchSaleById } from "@/util/fetch-sales";
+import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
+import { fetchSaleById, fetchSales } from "@/util/fetch-sales";
 
-//서버에서 동작
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-    const id = context.params!.id;  //params 값이 언제나 있을경우 ! 추가 
-    const sales = await fetchSaleById(Number(id));
-    return { props: {sales: sales} };
+//상품을 빌드시 미리 생성
+export async function getStaticPaths () {
+    const sales = await fetchSales();
+
+    return {
+        paths : sales.map((sale) => ({params: {id: String(sale.id)}})), //전체상품 미리 빌드 
+        // paths: [
+        //     {params: { id: '1' } }, 
+        //     {params: { id: '2' } }, 
+        //     {params: { id: '3' } }, 
+         //],
+        fallback: 'blocking',    //false: 1,2,3 번 아니면 404 error blocking:1,2,3번 아니면 ssr 처럼 만든다.
+    }
 }
 
-export default function Page({sales}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+//서버에서 동작
+export async function getStaticProps(context: GetStaticPropsContext) {
+    const id = context.params!.id;  //params 값이 언제나 있을경우 ! 추가 
+    const sales = await fetchSaleById(Number(id));
+    return { props: {sales: sales}, revalidate: 10 }; //10초 마다 증분된 값을 넘겨준다.
+}
+
+export default function Page({sales}: InferGetStaticPropsType<typeof getStaticProps>) {
 
     //console.log(sales);
     //console.log(sales?'true':'false');
