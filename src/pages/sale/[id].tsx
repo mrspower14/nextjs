@@ -26,7 +26,7 @@ export async function getStaticPaths () {
 export async function getStaticProps(context: GetStaticPropsContext) {
     const id = context.params!.id;  //params 값이 언제나 있을경우 ! 추가 
     const sales = await fetchSaleById(Number(id));
-    return { props: {sales: sales}, revalidate: 10 }; //10초 마다 증분된 값을 넘겨준다.
+    return { props: {sales: sales}, revalidate: 10 }; //10초 마다 증분된 값을 넘겨준다. isr(증분 정적페이지 재생성)
 }
 
 export default function Page({sales}: InferGetStaticPropsType<typeof getStaticProps>) {
